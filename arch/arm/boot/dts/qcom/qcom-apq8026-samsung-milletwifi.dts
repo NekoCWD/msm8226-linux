@@ -23,7 +23,7 @@
 	chassis-type = "tablet";
 
 	aliases {
-		display0 = &framebuffer0;
+		serial0 = &blsp1_uart3;
 		mmc0 = &sdhc_1; /* SDC1 eMMC slot */
 		mmc1 = &sdhc_2; /* SDC2 SD card slot */
 	};
@@ -32,17 +32,7 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 		ranges;
-
-		stdout-path = "display0";
-
-		framebuffer0: framebuffer@3200000 {
-			compatible = "simple-framebuffer";
-			reg = <0x03200000 0x800000>;
-			width = <800>;
-			height = <1280>;
-			stride = <(800 * 3)>;
-			format = "r8g8b8";
-		};
+		stdout-path = "serial0:115200n8";
 	};
 
 	gpio-hall-sensor {
@@ -308,6 +298,44 @@
 		pinctrl-0 = <&tsp_int_rst_default_state>;
 		pinctrl-names = "default";
 	};
+};
+
+&gpu {
+	status = "okay";
+};
+
+&mdss {
+	status = "okay";
+};
+
+&mdss_dsi0 {
+	vdda-supply = <&pm8226_l4>;
+	vdd-supply = <&pm8226_l18>;
+	vddio-supply = <&pm8226_l8>;
+	
+	panel@0 {
+        compatible = "samsung,lsl080al02", "samsung,s6d7aa0";
+        reg = <0>;
+		reset-gpios = <&tlmm 108 GPIO_ACTIVE_LOW>;
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+    };
+};
+
+&mdss_dsi0_out {
+	remote-endpoint = <&panel_in>;
+	data-lanes = <0 1 2 3>;
+};
+
+&mdss_dsi0_phy {
+	vddio-supply = <&pm8226_l8>;
+};
+
+&blsp1_uart3 {
+	status = "okay";
 };
 
 &modem {
