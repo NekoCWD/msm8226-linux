@@ -7,6 +7,7 @@
 /dts-v1/;
 
 #include <dt-bindings/input/input.h>
+#include <dt-bindings/pinctrl/qcom,pmic-gpio.h>
 #include <dt-bindings/power/summit,smb347-charger.h>
 #include "qcom-msm8226.dtsi"
 #include "pm8226.dtsi"
@@ -120,6 +121,19 @@
 				rom-val = /bits/ 8 <0xfa>;
 			};
 		};
+	};
+
+	reg_panel_3p3v: regulator-panel-3p3v {
+		compatible = "regulator-fixed";
+		regulator-name = "panel_3p3v";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+
+		gpio = <&pm8226_gpios 2 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&lcd_en_default_state>;
 	};
 
 	reg_backlight_vddio: regulator-backlight-vddio {
@@ -310,19 +324,21 @@
 
 &mdss_dsi0 {
 	vdda-supply = <&pm8226_l4>;
-	vdd-supply = <&pm8226_l18>;
+	vdd-supply = <&reg_panel_3p3v>;
 	vddio-supply = <&pm8226_l8>;
-	
+
 	panel@0 {
-        compatible = "samsung,lsl080al02", "samsung,s6d7aa0";
-        reg = <0>;
-		reset-gpios = <&tlmm 108 GPIO_ACTIVE_LOW>;
+		compatible = "samsung,lsl080al02", "samsung,s6d7aa0";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 25 GPIO_ACTIVE_LOW>;
+
 		port {
 			panel_in: endpoint {
 				remote-endpoint = <&mdss_dsi0_out>;
 			};
 		};
-    };
+	};
 };
 
 &mdss_dsi0_out {
@@ -365,6 +381,15 @@
 		wcnss {
 			status = "okay";
 		};
+	};
+};
+
+&pm8226_gpios {
+	lcd_en_default_state: lcd-en-default-state {
+		pins = "gpio2";
+		function = "normal";
+		output-high;
+		qcom,drive-strength = <PMIC_GPIO_STRENGTH_MED>;
 	};
 };
 
