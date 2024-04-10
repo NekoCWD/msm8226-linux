@@ -77,6 +77,10 @@ static void __iomem *_msm_ioremap(struct platform_device *pdev, const char *name
 		return ERR_PTR(-ENOMEM);
 	}
 
+	if (strcmp(name, "dsi_pll") == 0) {
+		printk(KERN_ERR "%s:%d DBG dsi_pll start=0x%x size=0x%lx remapped=%px\n", __func__, __LINE__, res->start, size, ptr);
+	}
+
 	if (psize)
 		*psize = size;
 

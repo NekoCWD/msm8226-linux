@@ -622,6 +622,7 @@ static int dsi_phy_driver_probe(struct platform_device *pdev)
 	struct msm_dsi_phy *phy;
 	struct device *dev = &pdev->dev;
 	u32 phy_type;
+	u32 test;
 	int ret;
 
 	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
@@ -657,10 +658,15 @@ static int dsi_phy_driver_probe(struct platform_device *pdev)
 		return dev_err_probe(dev, PTR_ERR(phy->base),
 				     "Failed to map phy base\n");
 
+	printk(KERN_ERR "%s:%d DBG\n", __func__, __LINE__);
+
 	phy->pll_base = msm_ioremap_size(pdev, "dsi_pll", &phy->pll_size);
 	if (IS_ERR(phy->pll_base))
 		return dev_err_probe(dev, PTR_ERR(phy->pll_base),
 				     "Failed to map pll base\n");
+	printk(KERN_ERR "%s:%d DBG pll_base=%px\n", __func__, __LINE__, phy->pll_base);
+	test = dsi_phy_read(phy->pll_base + 0x0 /*REG_DSI_28nm_PHY_PLL_REFCLK_CFG*/);
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, test);
 
 	if (phy->cfg->has_phy_lane) {
 		phy->lane_base = msm_ioremap_size(pdev, "dsi_phy_lane", &phy->lane_size);
