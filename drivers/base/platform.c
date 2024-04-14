@@ -1380,6 +1380,12 @@ static int platform_probe(struct device *_dev)
 {
 	struct platform_driver *drv = to_platform_driver(_dev->driver);
 	struct platform_device *dev = to_platform_device(_dev);
+
+	void __iomem* dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "%s of %s -> %s DBG pll_base=%px\n", __func__, drv->driver.name, dev->name, dbg_base);
+	u32 dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "%s of %s -> %s DBG test=0x%x\n", __func__, drv->driver.name, dev->name, dbg_test);
+
 	int ret;
 
 	/*
