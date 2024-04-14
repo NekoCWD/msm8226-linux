@@ -2873,6 +2873,7 @@ static void msm8974_pro_clock_override(void)
 
 static int gcc_msm8974_probe(struct platform_device *pdev)
 {
+	
 	int ret;
 	struct device *dev = &pdev->dev;
 	const void *data = device_get_match_data(dev);
@@ -2885,6 +2886,12 @@ static int gcc_msm8974_probe(struct platform_device *pdev)
 	}
 
 	ret = qcom_cc_register_board_clk(dev, "xo_board", "xo", 19200000);
+
+	void __iomem* dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "%s:%d DBG pll_base=%px\n", __func__, __LINE__, dbg_base);
+	u32 dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, dbg_test);
+
 	if (ret)
 		return ret;
 
