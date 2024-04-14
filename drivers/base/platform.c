@@ -1413,6 +1413,10 @@ static int platform_probe(struct device *_dev)
 	}
 
 out:
+	printk(KERN_ERR "OUT %s of %s -> %s DBG pll_base=%px\n", __func__, drv->driver.name, dev->name, dbg_base);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "OUT %s of %s -> %s DBG test=0x%x\n", __func__, drv->driver.name, dev->name, dbg_test);
+
 	if (drv->prevent_deferred_probe && ret == -EPROBE_DEFER) {
 		dev_warn(_dev, "probe deferral not supported\n");
 		ret = -ENXIO;
