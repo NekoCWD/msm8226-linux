@@ -25,8 +25,6 @@
 
 	aliases {
 		serial0 = &blsp1_uart3;
-		mmc0 = &sdhc_1; /* SDC1 eMMC slot */
-		mmc1 = &sdhc_2; /* SDC2 SD card slot */
 	};
 
 	chosen {
@@ -34,145 +32,6 @@
 		#size-cells = <1>;
 		ranges;
 		stdout-path = "serial0:115200n8";
-	};
-
-	gpio-hall-sensor {
-		compatible = "gpio-keys";
-
-		event-hall-sensor {
-			label = "Cover";
-			gpios = <&tlmm 37 GPIO_ACTIVE_LOW>;
-			linux,input-type = <EV_SW>;
-			linux,code = <SW_LID>;
-			debounce-interval = <15>;
-			linux,can-disable;
-			wakeup-source;
-		};
-	};
-
-	gpio-keys {
-		compatible = "gpio-keys";
-		autorepeat;
-
-		key-home {
-			label = "Home";
-			gpios = <&tlmm 108 GPIO_ACTIVE_LOW>;
-			linux,code = <KEY_HOMEPAGE>;
-			debounce-interval = <15>;
-		};
-
-		key-volume-down {
-			label = "Volume Down";
-			gpios = <&tlmm 107 GPIO_ACTIVE_LOW>;
-			linux,code = <KEY_VOLUMEDOWN>;
-			debounce-interval = <15>;
-		};
-
-		key-volume-up {
-			label = "Volume Up";
-			gpios = <&tlmm 106 GPIO_ACTIVE_LOW>;
-			linux,code = <KEY_VOLUMEUP>;
-			debounce-interval = <15>;
-		};
-	};
-
-	i2c-backlight {
-		compatible = "i2c-gpio";
-		sda-gpios = <&tlmm 20 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
-		scl-gpios = <&tlmm 21 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
-
-		pinctrl-0 = <&backlight_i2c_default_state>;
-		pinctrl-names = "default";
-
-		i2c-gpio,delay-us = <4>;
-
-		#address-cells = <1>;
-		#size-cells = <0>;
-
-		backlight@2c {
-			compatible = "ti,lp8556";
-			reg = <0x2c>;
-			enable-supply = <&reg_backlight_vddio>;
-
-			dev-ctrl = /bits/ 8 <0x80>;
-			init-brt = /bits/ 8 <0x3f>;
-
-			/*
-			 * Change transition duration: 200ms, Change transition strength: heavy,
-			 * PWM hysteresis: 1-bit w/ 8-bit resolution
-			 */
-			rom-a3h {
-				rom-addr = /bits/ 8 <0xa3>;
-				rom-val = /bits/ 8 <0x5e>;
-			};
-
-			/*
-			 * PWM output phase configuration: 3-phase, 3 drivers (0, 120deg, 240deg, -, -, -),
-			 * PWM frequency: 9616Hz (10-bit)
-			 */
-			rom-a5h {
-				rom-addr = /bits/ 8 <0xa5>;
-				rom-val = /bits/ 8 <0x34>;
-			};
-
-			/* Enable LED drivers 2 & 3, Boot inductor current limit: 1.5A/2.6A */
-			rom-a7h {
-				rom-addr = /bits/ 8 <0xa7>;
-				rom-val = /bits/ 8 <0xfa>;
-			};
-		};
-	};
-
-	reg_panel_3p3v: regulator-panel-3p3v {
-		compatible = "regulator-fixed";
-		regulator-name = "panel_3p3v";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-
-		gpio = <&pm8226_gpios 2 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&lcd_en_default_state>;
-	};
-
-	reg_backlight_vddio: regulator-backlight-vddio {
-		compatible = "regulator-fixed";
-		regulator-name = "backlight_vddio";
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-
-		gpio = <&tlmm 74 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&backlight_vddio_default_state>;
-	};
-
-	reg_tsp_1p8v: regulator-tsp-1p8v {
-		compatible = "regulator-fixed";
-		regulator-name = "tsp_1p8v";
-		regulator-min-microvolt = <1800000>;
-		regulator-max-microvolt = <1800000>;
-
-		gpio = <&tlmm 114 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&tsp_en1_default_state>;
-	};
-
-	reg_tsp_3p3v: regulator-tsp-3p3v {
-		compatible = "regulator-fixed";
-		regulator-name = "tsp_3p3v";
-		regulator-min-microvolt = <3300000>;
-		regulator-max-microvolt = <3300000>;
-
-		gpio = <&tlmm 31 GPIO_ACTIVE_HIGH>;
-		enable-active-high;
-
-		pinctrl-names = "default";
-		pinctrl-0 = <&tsp_en_default_state>;
 	};
 
 	reserved-memory {
@@ -240,80 +99,6 @@
 	};
 };
 
-&blsp1_i2c2 {
-	status = "okay";
-
-	accelerometer@1d {
-		compatible = "st,lis2hh12";
-		reg = <0x1d>;
-
-		interrupts-extended = <&tlmm 54 IRQ_TYPE_LEVEL_HIGH>;
-
-		pinctrl-0 = <&accel_int_default_state>;
-		pinctrl-names = "default";
-
-		st,drdy-int-pin = <1>;
-
-		vdd-supply = <&pm8226_l19>;
-		vddio-supply = <&pm8226_lvs1>;
-
-		mount-matrix = "0", "1", "0",
-			       "-1", "0", "0",
-			       "0", "0", "1";
-	};
-};
-
-&blsp1_i2c3 {
-	status = "okay";
-
-	charger@6a {
-		compatible = "summit,smb358";
-		reg = <0x6a>;
-
-		interrupts-extended = <&tlmm 115 IRQ_TYPE_EDGE_FALLING>;
-
-		pinctrl-0 = <&charger_int_default_state>;
-		pinctrl-names = "default";
-
-		summit,enable-usb-charging;
-		summit,enable-charge-control = <SMB3XX_CHG_ENABLE_SW>;
-		summit,fast-voltage-threshold-microvolt = <3000000>;
-		summit,chip-temperature-threshold-celsius = <130>;
-		summit,usb-current-limit-microamp = <1500000>;
-	};
-};
-
-&blsp1_i2c4 {
-	status = "okay";
-
-	muic: usb-switch@25 {
-		compatible = "siliconmitus,sm5502-muic";
-		reg = <0x25>;
-
-		interrupts-extended = <&tlmm 67 IRQ_TYPE_EDGE_FALLING>;
-
-		pinctrl-0 = <&muic_int_default_state>;
-		pinctrl-names = "default";
-	};
-};
-
-&blsp1_i2c5 {
-	status = "okay";
-
-	touchscreen@48 {
-		compatible = "melfas,mms252", "melfas,mms114";
-		reg = <0x48>;
-		interrupts-extended = <&tlmm 17 IRQ_TYPE_EDGE_FALLING>;
-		touchscreen-size-x = <800>;
-		touchscreen-size-y = <1280>;
-		avdd-supply = <&reg_tsp_3p3v>;
-		vdd-supply = <&reg_tsp_1p8v>;
-
-		pinctrl-0 = <&tsp_int_rst_default_state>;
-		pinctrl-names = "default";
-	};
-};
-
 &gpu {
 	status = "okay";
 };
@@ -324,8 +109,10 @@
 
 &mdss_dsi0 {
 	vdda-supply = <&pm8226_l4>;
-	vdd-supply = <&reg_panel_3p3v>;
+	//vdd-supply = <&reg_panel_3p3v>;
 	vddio-supply = <&pm8226_l8>;
+	vdd-supply = <&pm8226_l18>; // as in lenok
+
 
 	panel@0 {
 		compatible = "samsung,lsl080al02", "samsung,s6d7aa0";
@@ -352,45 +139,6 @@
 
 &blsp1_uart3 {
 	status = "okay";
-};
-
-&modem {
-	mx-supply = <&pm8226_l3>;
-	pll-supply = <&pm8226_l8>;
-
-	status = "okay";
-};
-
-&pronto {
-	vddmx-supply = <&pm8226_l3>;
-	vddpx-supply = <&pm8226_l6>;
-
-	pinctrl-0 = <&wcnss_pin_a>;
-	pinctrl-names = "default";
-
-	status = "okay";
-
-	iris {
-		vddxo-supply = <&pm8226_l10>;
-		vddrfa-supply = <&pm8226_l24>;
-		vddpa-supply = <&pm8226_l16>;
-		vdddig-supply = <&pm8226_l24>;
-	};
-
-	smd-edge {
-		wcnss {
-			status = "okay";
-		};
-	};
-};
-
-&pm8226_gpios {
-	lcd_en_default_state: lcd-en-default-state {
-		pins = "gpio2";
-		function = "normal";
-		output-high;
-		qcom,drive-strength = <PMIC_GPIO_STRENGTH_MED>;
-	};
 };
 
 &rpm_requests {
@@ -551,110 +299,4 @@
 
 		pm8226_lvs1: lvs1 {};
 	};
-};
-
-&sdhc_1 {
-	vmmc-supply = <&pm8226_l17>;
-	vqmmc-supply = <&pm8226_l6>;
-
-	bus-width = <8>;
-	non-removable;
-
-	status = "okay";
-};
-
-&sdhc_2 {
-	vmmc-supply = <&pm8226_l18>;
-	vqmmc-supply = <&pm8226_l21>;
-
-	bus-width = <4>;
-	cd-gpios = <&tlmm 38 GPIO_ACTIVE_LOW>;
-
-	pinctrl-0 = <&sdhc2_default_state>, <&sdc2_cd_default_state>;
-	pinctrl-names = "default";
-
-	status = "okay";
-};
-
-&tlmm {
-	accel_int_default_state: accel-int-default-state {
-		pins = "gpio54";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	backlight_i2c_default_state: backlight-i2c-default-state {
-		pins = "gpio20", "gpio21";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	backlight_vddio_default_state: backlight-vddio-default-state {
-		pins = "gpio74";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	charger_int_default_state: charger-int-default-state {
-		pins = "gpio115";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	muic_int_default_state: muic-int-default-state {
-		pins = "gpio67";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	sdc2_cd_default_state: sdc2-cd-default-state {
-		pins = "gpio38";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	tsp_en_default_state: tsp-en-default-state {
-		pins = "gpio31";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	tsp_en1_default_state: tsp-en1-default-state {
-		pins = "gpio114";
-		function = "gpio";
-		drive-strength = <2>;
-		bias-disable;
-	};
-
-	tsp_int_rst_default_state: tsp-int-rst-default-state {
-		pins = "gpio17";
-		function = "gpio";
-		drive-strength = <10>;
-		bias-pull-up;
-	};
-
-	wcnss_pin_a: wcnss-pin-active-state {
-		pins = "gpio40", "gpio41", "gpio42", "gpio43", "gpio44";
-		function = "wlan";
-		drive-strength = <6>;
-		bias-pull-down;
-	};
-};
-
-&usb {
-	extcon = <&muic>, <&muic>;
-	status = "okay";
-};
-
-&usb_hs_phy {
-	extcon = <&muic>;
-	v1p8-supply = <&pm8226_l10>;
-	v3p3-supply = <&pm8226_l20>;
 };
