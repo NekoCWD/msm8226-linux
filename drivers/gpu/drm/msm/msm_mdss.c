@@ -378,35 +378,50 @@ static int mdp5_mdss_parse_clock(struct platform_device *pdev, struct clk_bulk_d
 
 static struct msm_mdss *msm_mdss_init(struct platform_device *pdev, bool is_mdp5)
 {
+	void __iomem* dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "%s:%d DBG pll_base=%px\n", __func__, __LINE__, dbg_base);
 	struct msm_mdss *msm_mdss;
 	int ret;
 	int irq;
-
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	ret = msm_mdss_reset(&pdev->dev);
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	if (ret)
 		return ERR_PTR(ret);
 
+
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	msm_mdss = devm_kzalloc(&pdev->dev, sizeof(*msm_mdss), GFP_KERNEL);
 	if (!msm_mdss)
 		return ERR_PTR(-ENOMEM);
 
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	msm_mdss->mdss_data = of_device_get_match_data(&pdev->dev);
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 
 	msm_mdss->mmio = devm_platform_ioremap_resource_byname(pdev, is_mdp5 ? "mdss_phys" : "mdss");
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	if (IS_ERR(msm_mdss->mmio))
 		return ERR_CAST(msm_mdss->mmio);
 
 	dev_dbg(&pdev->dev, "mapped mdss address space @%pK\n", msm_mdss->mmio);
 
 	ret = msm_mdss_parse_data_bus_icc_path(&pdev->dev, msm_mdss);
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	if (ret)
 		return ERR_PTR(ret);
 
-	if (is_mdp5)
+	if (is_mdp5){
 		ret = mdp5_mdss_parse_clock(pdev, &msm_mdss->clocks);
-	else
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
+
+	}
+	else{
 		ret = devm_clk_bulk_get_all(&pdev->dev, &msm_mdss->clocks);
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
+	}
 	if (ret < 0) {
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 		dev_err(&pdev->dev, "failed to parse clocks, ret=%d\n", ret);
 		return ERR_PTR(ret);
 	}
@@ -419,14 +434,20 @@ static struct msm_mdss *msm_mdss_init(struct platform_device *pdev, bool is_mdp5
 	if (irq < 0)
 		return ERR_PTR(irq);
 
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	ret = _msm_mdss_irq_domain_add(msm_mdss);
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	if (ret)
 		return ERR_PTR(ret);
 
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	irq_set_chained_handler_and_data(irq, msm_mdss_irq,
 					 msm_mdss);
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	pm_runtime_enable(&pdev->dev);
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 
 	return msm_mdss;
 }
@@ -473,16 +494,23 @@ static const struct dev_pm_ops mdss_pm_ops = {
 
 static int mdss_probe(struct platform_device *pdev)
 {
+	void __iomem* dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "%s:%d DBG pll_base=%px\n", __func__, __LINE__, dbg_base);
+	
 	struct msm_mdss *mdss;
 	bool is_mdp5 = of_device_is_compatible(pdev->dev.of_node, "qcom,mdss");
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	struct device *dev = &pdev->dev;
 	int ret;
 
 	mdss = msm_mdss_init(pdev, is_mdp5);
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	if (IS_ERR(mdss))
 		return PTR_ERR(mdss);
 
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	platform_set_drvdata(pdev, mdss);
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 
 	/*
 	 * MDP5/DPU based devices don't have a flat hierarchy. There is a top
@@ -490,13 +518,16 @@ static int mdss_probe(struct platform_device *pdev)
 	 * Populate the children devices, find the MDP5/DPU node, and then add
 	 * the interfaces to our components list.
 	 */
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	ret = of_platform_populate(dev->of_node, NULL, NULL, dev);
 	if (ret) {
 		DRM_DEV_ERROR(dev, "failed to populate children devices\n");
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 		msm_mdss_destroy(mdss);
+		printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 		return ret;
 	}
-
+	printk(KERN_ERR "%s:%d DBG test=0x%x\n", __func__, __LINE__, readl_relaxed(dbg_base));
 	return 0;
 }
 
