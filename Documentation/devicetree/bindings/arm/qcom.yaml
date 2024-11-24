@@ -249,6 +249,12 @@ properties:
 
       - items:
           - enum:
+              - xiaomi,riva
+              - huawei,agassi
+          - const: qcom,msm8917
+
+      - items:
+          - enum:
               - motorola,potter
               - xiaomi,daisy
               - xiaomi,mido
