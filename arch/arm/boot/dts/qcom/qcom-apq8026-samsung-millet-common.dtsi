@@ -317,6 +317,10 @@
 	};
 };
 
+&blsp1_uart3 {
+	status = "okay";
+};
+
 &modem {
 	mx-supply = <&pm8226_l3>;
 	pll-supply = <&pm8226_l8>;
