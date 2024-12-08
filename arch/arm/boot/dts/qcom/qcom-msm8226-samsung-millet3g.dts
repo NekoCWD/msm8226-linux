@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: BSD-3-Clause
+/*
+ * Samsung millet 3G device tree
+ *
+ * Copyright (c) 2024, NekoCWD <nekodevelopper@gmail.com>
+ */
+
+#include "qcom-apq8026-samsung-millet-common.dtsi"
+
+/ {
+	model = "Samsung Galaxy Tab 4 8.0 3G";
+	compatible = "samsung,millet3g", "qcom,msm8226";
+};
