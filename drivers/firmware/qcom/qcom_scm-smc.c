@@ -2,7 +2,6 @@
 /* Copyright (c) 2015,2019 The Linux Foundation. All rights reserved.
  */
 
-#include <linux/cleanup.h>
 #include <linux/io.h>
 #include <linux/errno.h>
 #include <linux/delay.h>
@@ -10,7 +9,6 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 #include <linux/firmware/qcom/qcom_scm.h>
-#include <linux/firmware/qcom/qcom_tzmem.h>
 #include <linux/arm-smccc.h>
 #include <linux/dma-mapping.h>
 
@@ -152,10 +150,11 @@ int __scm_smc_call(struct device *dev, const struct qcom_scm_desc *desc,
 		   enum qcom_scm_convention qcom_convention,
 		   struct qcom_scm_res *res, bool atomic)
 {
-	struct qcom_tzmem_pool *mempool = qcom_scm_get_tzmem_pool();
 	int arglen = desc->arginfo & 0xf;
 	int i, ret;
-	void *args_virt __free(qcom_tzmem) = NULL;
+	dma_addr_t args_phys = 0;
+	void *args_virt = NULL;
+	size_t alloc_len;
 	gfp_t flag = atomic ? GFP_ATOMIC : GFP_KERNEL;
 	u32 smccc_call_type = atomic ? ARM_SMCCC_FAST_CALL : ARM_SMCCC_STD_CALL;
 	u32 qcom_smccc_convention = (qcom_convention == SMC_CONVENTION_ARM_32) ?
@@ -173,9 +172,9 @@ int __scm_smc_call(struct device *dev, const struct qcom_scm_desc *desc,
 		smc.args[i + SCM_SMC_FIRST_REG_IDX] = desc->args[i];
 
 	if (unlikely(arglen > SCM_SMC_N_REG_ARGS)) {
-		args_virt = qcom_tzmem_alloc(mempool,
-					     SCM_SMC_N_EXT_ARGS * sizeof(u64),
-					     flag);
+		alloc_len = SCM_SMC_N_EXT_ARGS * sizeof(u64);
+		args_virt = kzalloc(PAGE_ALIGN(alloc_len), flag);
+
 		if (!args_virt)
 			return -ENOMEM;
 
@@ -193,10 +192,25 @@ int __scm_smc_call(struct device *dev, const struct qcom_scm_desc *desc,
 						      SCM_SMC_FIRST_EXT_IDX]);
 		}
 
-		smc.args[SCM_SMC_LAST_REG_IDX] = qcom_tzmem_to_phys(args_virt);
+		args_phys = dma_map_single(dev, args_virt, alloc_len,
+					   DMA_TO_DEVICE);
+
+		if (dma_mapping_error(dev, args_phys)) {
+			kfree(args_virt);
+			return -ENOMEM;
+		}
+
+		smc.args[SCM_SMC_LAST_REG_IDX] = args_phys;
 	}
 
+	/* ret error check follows after args_virt cleanup*/
 	ret = __scm_smc_do(dev, &smc, &smc_res, atomic);
+
+	if (args_virt) {
+		dma_unmap_single(dev, args_phys, alloc_len, DMA_TO_DEVICE);
+		kfree(args_virt);
+	}
+
 	if (ret)
 		return ret;
 
