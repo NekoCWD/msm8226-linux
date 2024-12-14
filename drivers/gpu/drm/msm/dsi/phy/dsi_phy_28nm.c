@@ -5,6 +5,7 @@
 
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
+#include <dsidbg.h>
 
 #include "dsi_phy.h"
 #include "dsi.xml.h"
@@ -104,10 +105,12 @@ static void pll_28nm_software_reset(struct dsi_pll_28nm *pll_28nm)
 	 * Add HW recommended delays after toggling the software
 	 * reset bit off and back on.
 	 */
+	printk(KERN_ERR "MDSS RESET\n");
 	writel(DSI_28nm_PHY_PLL_TEST_CFG_PLL_SW_RESET, base + REG_DSI_28nm_PHY_PLL_TEST_CFG);
-	udelay(1);
+	mdelay(100);
 	writel(0, base + REG_DSI_28nm_PHY_PLL_TEST_CFG);
-	udelay(1);
+	mdelay(100);
+	printk(KERN_ERR "MDSS RESET END\n");
 }
 
 /*
@@ -212,7 +215,7 @@ static int dsi_pll_28nm_clk_set_rate(struct clk_hw *hw, unsigned long rate,
 	if (pll_28nm->phy->cfg->quirks & DSI_PHY_28NM_QUIRK_PHY_LP)
 		udelay(1000);
 	else
-		udelay(1);
+		mdelay(100);
 
 	writel(refclk_cfg, base + REG_DSI_28nm_PHY_PLL_REFCLK_CFG);
 	writel(0x00, base + REG_DSI_28nm_PHY_PLL_PWRGEN_CFG);
@@ -399,7 +402,7 @@ static int dsi_pll_28nm_vco_prepare_8226(struct clk_hw *hw)
 	u32 val;
 	int i;
 
-	DBG("id=%d", pll_28nm->phy->id);
+	printk(KERN_ERR "PLL id=%d", pll_28nm->phy->id);
 
 	pll_28nm_software_reset(pll_28nm);
 
@@ -408,25 +411,29 @@ static int dsi_pll_28nm_vco_prepare_8226(struct clk_hw *hw)
 	 * Add necessary delays recommended by hardware.
 	 */
 	writel(0x34, base + REG_DSI_28nm_PHY_PLL_CAL_CFG1);
-
+	mdelay(100);
 	val = DSI_28nm_PHY_PLL_GLB_CFG_PLL_PWRDN_B;
 	writel(val, base + REG_DSI_28nm_PHY_PLL_GLB_CFG);
-	udelay(200);
+	mdelay(100);
 
 	val |= DSI_28nm_PHY_PLL_GLB_CFG_PLL_PWRGEN_PWRDN_B;
 	writel(val, base + REG_DSI_28nm_PHY_PLL_GLB_CFG);
-	udelay(200);
+	mdelay(100);
+	
 
 	val |= DSI_28nm_PHY_PLL_GLB_CFG_PLL_LDO_PWRDN_B;
 	val |= DSI_28nm_PHY_PLL_GLB_CFG_PLL_ENABLE;
 	writel(val, base + REG_DSI_28nm_PHY_PLL_GLB_CFG);
-	udelay(600);
+	mdelay(100);
+	
 
 	for (i = 0; i < 7; i++) {
 		/* DSI Uniphy lock detect setting */
 		writel(0x0d, base + REG_DSI_28nm_PHY_PLL_LKDET_CFG2);
+		mdelay(100);
 		writel(0x0c, base + REG_DSI_28nm_PHY_PLL_LKDET_CFG2);
-		udelay(100);
+		mdelay(100);
+		
 		writel(0x0d, base + REG_DSI_28nm_PHY_PLL_LKDET_CFG2);
 
 		/* poll for PLL ready status */
@@ -442,17 +449,20 @@ static int dsi_pll_28nm_vco_prepare_8226(struct clk_hw *hw)
 		 * Add necessary delays recommended by hardware.
 		 */
 		writel(0x00, base + REG_DSI_28nm_PHY_PLL_PWRGEN_CFG);
-		udelay(50);
+		mdelay(100);
+
 
 		val = DSI_28nm_PHY_PLL_GLB_CFG_PLL_PWRDN_B;
 		val |= DSI_28nm_PHY_PLL_GLB_CFG_PLL_PWRGEN_PWRDN_B;
 		writel(val, base + REG_DSI_28nm_PHY_PLL_GLB_CFG);
-		udelay(100);
+		mdelay(100);
+
 
 		val |= DSI_28nm_PHY_PLL_GLB_CFG_PLL_LDO_PWRDN_B;
 		val |= DSI_28nm_PHY_PLL_GLB_CFG_PLL_ENABLE;
 		writel(val, base + REG_DSI_28nm_PHY_PLL_GLB_CFG);
-		udelay(600);
+		mdelay(100);
+
 	}
 
 	if (unlikely(!locked))
@@ -484,26 +494,32 @@ static int dsi_pll_28nm_vco_prepare_lp(struct clk_hw *hw)
 	 * Add necessary delays recommended by hardware.
 	 */
 	writel(0x34, base + REG_DSI_28nm_PHY_PLL_CAL_CFG1);
-	ndelay(500);
+		mdelay(100);
+
 
 	val = DSI_28nm_PHY_PLL_GLB_CFG_PLL_PWRDN_B;
 	writel(val, base + REG_DSI_28nm_PHY_PLL_GLB_CFG);
-	ndelay(500);
+		mdelay(100);
+
 
 	val |= DSI_28nm_PHY_PLL_GLB_CFG_PLL_PWRGEN_PWRDN_B;
 	writel(val, base + REG_DSI_28nm_PHY_PLL_GLB_CFG);
-	ndelay(500);
+		mdelay(100);
+
 
 	val |= DSI_28nm_PHY_PLL_GLB_CFG_PLL_LDO_PWRDN_B |
 		DSI_28nm_PHY_PLL_GLB_CFG_PLL_ENABLE;
 	writel(val, base + REG_DSI_28nm_PHY_PLL_GLB_CFG);
-	ndelay(500);
+		mdelay(100);
+
 
 	/* DSI PLL toggle lock detect setting */
 	writel(0x04, base + REG_DSI_28nm_PHY_PLL_LKDET_CFG2);
-	ndelay(500);
+		mdelay(100);
+
 	writel(0x05, base + REG_DSI_28nm_PHY_PLL_LKDET_CFG2);
-	udelay(512);
+		mdelay(100);
+
 
 	locked = pll_28nm_poll_for_ready(pll_28nm, max_reads, timeout_us);
 
@@ -630,7 +646,7 @@ static int pll_28nm_register(struct dsi_pll_28nm *pll_28nm, struct clk_hw **prov
 	struct clk_hw *hw, *analog_postdiv, *indirect_path_div2, *byte_mux;
 	int ret;
 
-	DBG("%d", pll_28nm->phy->id);
+	printk(KERN_ERR "PLL %d", pll_28nm->phy->id);
 
 	if (pll_28nm->phy->cfg->quirks & DSI_PHY_28NM_QUIRK_PHY_LP)
 		vco_init.ops = &clk_ops_dsi_pll_28nm_vco_lp;
@@ -685,12 +701,13 @@ static int pll_28nm_register(struct dsi_pll_28nm *pll_28nm, struct clk_hw **prov
 	if (IS_ERR(hw))
 		return PTR_ERR(hw);
 	provided_clocks[DSI_BYTE_PLL_CLK] = hw;
-
+	DSI_DBG(0, "PLL INIT");
 	return 0;
 }
 
 static int dsi_pll_28nm_init(struct msm_dsi_phy *phy)
 {
+	printk(KERN_ERR "PLL INIT\n");
 	struct platform_device *pdev = phy->pdev;
 	struct dsi_pll_28nm *pll_28nm;
 	int ret;
@@ -711,7 +728,7 @@ static int dsi_pll_28nm_init(struct msm_dsi_phy *phy)
 	}
 
 	phy->vco_hw = &pll_28nm->clk_hw;
-
+	printk(KERN_ERR "PLL INIT END\n");
 	return 0;
 }
 
@@ -864,7 +881,7 @@ static void dsi_28nm_phy_disable(struct msm_dsi_phy *phy)
 }
 
 static const struct regulator_bulk_data dsi_phy_28nm_regulators[] = {
-	{ .supply = "vddio", .init_load_uA = 100000 },
+	{ .supply = "vddio", .init_load_uA = 200000 },
 };
 
 const struct msm_dsi_phy_cfg dsi_phy_28nm_hpm_cfgs = {

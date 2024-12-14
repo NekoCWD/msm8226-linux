@@ -5,6 +5,7 @@
 
 #include "mdp5_kms.h"
 #include "mdp5_ctl.h"
+#include <dsidbg.h>
 
 /*
  * CTL - MDP Control Pool Manager
@@ -684,6 +685,8 @@ void mdp5_ctlm_hw_reset(struct mdp5_ctl_manager *ctl_mgr)
 struct mdp5_ctl_manager *mdp5_ctlm_init(struct drm_device *dev,
 		void __iomem *mmio_base, struct mdp5_cfg_handler *cfg_hnd)
 {
+	DSI_DBG(0,"MD5 CTLM INIT");
+
 	struct mdp5_ctl_manager *ctl_mgr;
 	const struct mdp5_cfg_hw *hw_cfg = mdp5_cfg_get_hw_config(cfg_hnd);
 	int rev = mdp5_cfg_get_hw_rev(cfg_hnd);

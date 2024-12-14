@@ -4,6 +4,7 @@
  */
 
 #include "mdp5_kms.h"
+#include <dsidbg.h>
 
 /*
  * As of now, there are only 2 combinations possible for source split:
@@ -148,7 +149,7 @@ struct mdp5_hw_mixer *mdp5_mixer_init(struct drm_device *dev,
 				      const struct mdp5_lm_instance *lm)
 {
 	struct mdp5_hw_mixer *mixer;
-
+	DSI_DBG(0,"MD5 MIXER INIT");
 	mixer = devm_kzalloc(dev->dev, sizeof(*mixer), GFP_KERNEL);
 	if (!mixer)
 		return ERR_PTR(-ENOMEM);

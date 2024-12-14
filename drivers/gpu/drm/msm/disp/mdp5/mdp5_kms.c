@@ -8,6 +8,7 @@
 #include <linux/delay.h>
 #include <linux/interconnect.h>
 #include <linux/of_irq.h>
+#include <dsidbg.h>
 
 #include <drm/drm_debugfs.h>
 #include <drm/drm_drv.h>
@@ -24,8 +25,9 @@ static int mdp5_hw_init(struct msm_kms *kms)
 	struct mdp5_kms *mdp5_kms = to_mdp5_kms(to_mdp_kms(kms));
 	struct device *dev = &mdp5_kms->pdev->dev;
 	unsigned long flags;
-
+	DSI_DBG(0,"MD5 HW INIT");
 	pm_runtime_get_sync(dev);
+	DSI_DBG(0,"MD5 PM");
 
 	/* Magic unknown register writes:
 	 *
@@ -52,12 +54,16 @@ static int mdp5_hw_init(struct msm_kms *kms)
 	 */
 
 	spin_lock_irqsave(&mdp5_kms->resource_lock, flags);
+	DSI_DBG(0,"MD5 IRQ SAVE");
 	mdp5_write(mdp5_kms, REG_MDP5_DISP_INTF_SEL, 0);
+	DSI_DBG(0,"MD5 WRITE");
 	spin_unlock_irqrestore(&mdp5_kms->resource_lock, flags);
-
+	DSI_DBG(0,"MD5 UNLOCk");
 	mdp5_ctlm_hw_reset(mdp5_kms->ctlm);
+	DSI_DBG(0,"MD5 HW RESET");
 
 	pm_runtime_put_sync(dev);
+	DSI_DBG(0,"MD5 PM Sync");
 
 	return 0;
 }
@@ -231,17 +237,26 @@ static const struct mdp_kms_funcs kms_funcs = {
 
 static int mdp5_disable(struct mdp5_kms *mdp5_kms)
 {
+	DSI_DBG(0,"MD5 DISABLE");
+
 	DBG("");
 
 	mdp5_kms->enable_count--;
 	WARN_ON(mdp5_kms->enable_count < 0);
+	DSI_DBG(0,"MD5 WARN");
 
 	clk_disable_unprepare(mdp5_kms->tbu_rt_clk);
+	DSI_DBG(0,"MD5 CLK RT");
 	clk_disable_unprepare(mdp5_kms->tbu_clk);
+	DSI_DBG(0,"MD5 CLK TBU");
 	clk_disable_unprepare(mdp5_kms->ahb_clk);
+	DSI_DBG(0,"MD5 CLK AHB");
 	clk_disable_unprepare(mdp5_kms->axi_clk);
+	DSI_DBG(0,"MD5 CLK AXI");
 	clk_disable_unprepare(mdp5_kms->core_clk);
+	DSI_DBG(0,"MD5 CLK CORE");
 	clk_disable_unprepare(mdp5_kms->lut_clk);
+	DSI_DBG(0,"MD5 CLK LUT");
 
 	return 0;
 }
@@ -253,10 +268,15 @@ static int mdp5_enable(struct mdp5_kms *mdp5_kms)
 	mdp5_kms->enable_count++;
 
 	clk_prepare_enable(mdp5_kms->ahb_clk);
+	DSI_DBG(0,"MD5 CLK AHB");
 	clk_prepare_enable(mdp5_kms->axi_clk);
+	DSI_DBG(0,"MD5 CLK AXI");
 	clk_prepare_enable(mdp5_kms->core_clk);
+	DSI_DBG(0,"MD5 CLK LUT");
 	clk_prepare_enable(mdp5_kms->lut_clk);
+	DSI_DBG(0,"MD5 CLK TBU");
 	clk_prepare_enable(mdp5_kms->tbu_clk);
+	DSI_DBG(0,"MD5 CLK RT");
 	clk_prepare_enable(mdp5_kms->tbu_rt_clk);
 
 	return 0;
@@ -470,8 +490,7 @@ static void read_mdp_hw_revision(struct mdp5_kms *mdp5_kms,
 
 	*major = FIELD(version, MDP5_HW_VERSION_MAJOR);
 	*minor = FIELD(version, MDP5_HW_VERSION_MINOR);
-
-	DRM_DEV_INFO(dev, "MDP5 version v%d.%d", *major, *minor);
+	DSI_DBG(0,"MDP5 version v%d.%d", *major, *minor);
 }
 
 static int get_clk(struct platform_device *pdev, struct clk **clkp,
@@ -705,6 +724,9 @@ static int interface_init(struct mdp5_kms *mdp5_kms)
 
 static int mdp5_init(struct platform_device *pdev, struct drm_device *dev)
 {
+	DSI_DBG(0,"MD5 INIT");
+
+
 	struct msm_drm_private *priv = dev->dev_private;
 	struct mdp5_kms *mdp5_kms = to_mdp5_kms(to_mdp_kms(priv->kms));
 	struct mdp5_cfg *config;
@@ -716,19 +738,24 @@ static int mdp5_init(struct platform_device *pdev, struct drm_device *dev)
 	ret = mdp5_global_obj_init(mdp5_kms);
 	if (ret)
 		goto fail;
-
+	DSI_DBG(0,"MD5 INIT OBJ");
 	/* we need to set a default rate before enabling.  Set a safe
 	 * rate first, then figure out hw revision, and then set a
 	 * more optimal rate:
 	 */
 	clk_set_rate(mdp5_kms->core_clk, 200000000);
+	DSI_DBG(0,"MD5 SET RATE");
+
 
 	pm_runtime_enable(&pdev->dev);
 	mdp5_kms->rpm_enabled = true;
+	DSI_DBG(0,"MD5 RPM ENABLE");
+
 
 	read_mdp_hw_revision(mdp5_kms, &major, &minor);
 
 	mdp5_kms->cfg = mdp5_cfg_init(mdp5_kms, major, minor);
+	DSI_DBG(0,"MD5 CFG INIT");
 	if (IS_ERR(mdp5_kms->cfg)) {
 		ret = PTR_ERR(mdp5_kms->cfg);
 		mdp5_kms->cfg = NULL;
@@ -740,6 +767,8 @@ static int mdp5_init(struct platform_device *pdev, struct drm_device *dev)
 
 	/* TODO: compute core clock rate at runtime */
 	clk_set_rate(mdp5_kms->core_clk, config->hw->max_clk);
+	DSI_DBG(0,"MD5 SET RATE");
+	
 
 	/*
 	 * Some chipsets have a Shared Memory Pool (SMP), while others
@@ -748,6 +777,7 @@ static int mdp5_init(struct platform_device *pdev, struct drm_device *dev)
 	 */
 	if (mdp5_kms->caps & MDP_CAP_SMP) {
 		mdp5_kms->smp = mdp5_smp_init(mdp5_kms, &config->hw->smp);
+		DSI_DBG(0,"MD5 SMP");
 		if (IS_ERR(mdp5_kms->smp)) {
 			ret = PTR_ERR(mdp5_kms->smp);
 			mdp5_kms->smp = NULL;
@@ -756,6 +786,7 @@ static int mdp5_init(struct platform_device *pdev, struct drm_device *dev)
 	}
 
 	mdp5_kms->ctlm = mdp5_ctlm_init(dev, mdp5_kms->mmio, mdp5_kms->cfg);
+	DSI_DBG(0,"MD5 CTLM");
 	if (IS_ERR(mdp5_kms->ctlm)) {
 		ret = PTR_ERR(mdp5_kms->ctlm);
 		mdp5_kms->ctlm = NULL;
@@ -763,14 +794,19 @@ static int mdp5_init(struct platform_device *pdev, struct drm_device *dev)
 	}
 
 	ret = hwpipe_init(mdp5_kms);
+	DSI_DBG(0,"MD5 HWPIPE");
+
+
 	if (ret)
 		goto fail;
 
 	ret = hwmixer_init(mdp5_kms);
+	DSI_DBG(0,"MD5 HWMIXER");
 	if (ret)
 		goto fail;
 
 	ret = interface_init(mdp5_kms);
+	DSI_DBG(0,"MD5 IFACE");
 	if (ret)
 		goto fail;
 
@@ -782,10 +818,11 @@ fail:
 
 static int mdp5_setup_interconnect(struct platform_device *pdev)
 {
+	DSI_DBG(0,"MD5 INTERCONENCT");
 	struct icc_path *path0 = msm_icc_get(&pdev->dev, "mdp0-mem");
 	struct icc_path *path1 = msm_icc_get(&pdev->dev, "mdp1-mem");
 	struct icc_path *path_rot = msm_icc_get(&pdev->dev, "rotator-mem");
-
+	DSI_DBG(0,"MD5 ICC");
 	if (IS_ERR(path0))
 		return PTR_ERR(path0);
 
@@ -812,6 +849,12 @@ static int mdp5_setup_interconnect(struct platform_device *pdev)
 
 static int mdp5_dev_probe(struct platform_device *pdev)
 {
+	void __iomem* dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 PROBE INIT pll_base=%px\n", dbg_base);
+	msleep(1);
+	u32 dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 PROBE INIT test=0x%x\n", dbg_test);
+	msleep(1);
 	struct mdp5_kms *mdp5_kms;
 	int ret, irq;
 
@@ -823,41 +866,107 @@ static int mdp5_dev_probe(struct platform_device *pdev)
 	mdp5_kms = devm_kzalloc(&pdev->dev, sizeof(*mdp5_kms), GFP_KERNEL);
 	if (!mdp5_kms)
 		return -ENOMEM;
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 KZALLOC pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 KZALOC test=0x%x\n", dbg_test);
+	msleep(1);
 
 	ret = mdp5_setup_interconnect(pdev);
 	if (ret)
 		return ret;
 
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 INTERCONNECT pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 INTERCONNECT test=0x%x\n", dbg_test);
+	msleep(1);
+
 	mdp5_kms->pdev = pdev;
 
 	spin_lock_init(&mdp5_kms->resource_lock);
 
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 SPIN LOCK pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 SPIN LOCK test=0x%x\n", dbg_test);
+	msleep(1);
+
+
 	mdp5_kms->mmio = msm_ioremap(pdev, "mdp_phys");
 	if (IS_ERR(mdp5_kms->mmio))
 		return PTR_ERR(mdp5_kms->mmio);
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 IOREMAP pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 IOREMAP test=0x%x\n", dbg_test);
+	msleep(1);
 
 	/* mandatory clocks: */
 	ret = get_clk(pdev, &mdp5_kms->axi_clk, "bus", true);
 	if (ret)
 		return ret;
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 CLK BUS pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 CLK BUS test=0x%x\n", dbg_test);
+	msleep(1);
 	ret = get_clk(pdev, &mdp5_kms->ahb_clk, "iface", true);
 	if (ret)
 		return ret;
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 CLK IFACE pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 CLK IFACE test=0x%x\n", dbg_test);
+	msleep(1);
 	ret = get_clk(pdev, &mdp5_kms->core_clk, "core", true);
 	if (ret)
 		return ret;
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 CLK CORE pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 CLK CORE test=0x%x\n", dbg_test);
+	msleep(1);
+
 	ret = get_clk(pdev, &mdp5_kms->vsync_clk, "vsync", true);
 	if (ret)
 		return ret;
+		dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 CLK VSYNC pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 CLK VSYNC test=0x%x\n", dbg_test);
+	msleep(1);
+
 
 	/* optional clocks: */
 	get_clk(pdev, &mdp5_kms->lut_clk, "lut", false);
 	get_clk(pdev, &mdp5_kms->tbu_clk, "tbu", false);
 	get_clk(pdev, &mdp5_kms->tbu_rt_clk, "tbu_rt", false);
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 CLK OPT pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 CLK OPT test=0x%x\n", dbg_test);
+	msleep(1);
+
 
 	irq = platform_get_irq(pdev, 0);
 	if (irq < 0)
 		return dev_err_probe(&pdev->dev, irq, "failed to get irq\n");
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5 IRQ pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5 IRQ test=0x%x\n", dbg_test);
+	msleep(1);
 
 	mdp5_kms->base.base.irq = irq;
 
@@ -866,12 +975,14 @@ static int mdp5_dev_probe(struct platform_device *pdev)
 
 static void mdp5_dev_remove(struct platform_device *pdev)
 {
+	DSI_DBG(0,"MD5 REMOVE");
 	DBG("");
 	component_master_del(&pdev->dev, &msm_drm_ops);
 }
 
 static __maybe_unused int mdp5_runtime_suspend(struct device *dev)
 {
+	DSI_DBG(0,"MD5 SUSPEND");
 	struct platform_device *pdev = to_platform_device(dev);
 	struct msm_drm_private *priv = platform_get_drvdata(pdev);
 	struct mdp5_kms *mdp5_kms = to_mdp5_kms(to_mdp_kms(priv->kms));
@@ -883,6 +994,7 @@ static __maybe_unused int mdp5_runtime_suspend(struct device *dev)
 
 static __maybe_unused int mdp5_runtime_resume(struct device *dev)
 {
+	DSI_DBG(0,"MD5 RESUME");
 	struct platform_device *pdev = to_platform_device(dev);
 	struct msm_drm_private *priv = platform_get_drvdata(pdev);
 	struct mdp5_kms *mdp5_kms = to_mdp5_kms(to_mdp_kms(priv->kms));

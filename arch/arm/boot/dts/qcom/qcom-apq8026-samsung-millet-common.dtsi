@@ -617,3 +617,33 @@
 	v1p8-supply = <&pm8226_l10>;
 	v3p3-supply = <&pm8226_l20>;
 };
+
+&gpu {
+	status = "okay";
+};
+&mdss {
+	status = "okay";
+};
+&mdss_dsi0 {
+	vdda-supply = <&pm8226_l4>;
+	vdd-supply = <&pm8226_l15>;
+	vddio-supply = <&pm8226_l8>;
+	
+	panel@0 {
+        compatible = "samsung,lsl080al02", "samsung,s6d7aa0";
+        reg = <0>;
+		reset-gpios = <&tlmm 108 GPIO_ACTIVE_LOW>;
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+    };
+};
+&mdss_dsi0_out {
+	remote-endpoint = <&panel_in>;
+	data-lanes = <0 1 2 3>;
+};
+&mdss_dsi0_phy {
+	vddio-supply = <&pm8226_l8>;
+};

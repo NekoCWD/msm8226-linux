@@ -14,6 +14,7 @@
 #include <drm/drm_print.h>
 
 #include "mdp5_kms.h"
+#include <dsidbg.h>
 
 struct mdp5_plane {
 	struct drm_plane base;
@@ -1025,6 +1026,7 @@ static const uint32_t mdp5_plane_formats[] = {
 struct drm_plane *mdp5_plane_init(struct drm_device *dev,
 				  enum drm_plane_type type)
 {
+	DSI_DBG(0,"MD5 PLANE INIT");
 	struct drm_plane *plane = NULL;
 	struct mdp5_plane *mdp5_plane;
 

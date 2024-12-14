@@ -5,6 +5,7 @@
 
 #include "mdp5_kms.h"
 #include "mdp5_cfg.h"
+#include <dsidbg.h>
 
 struct mdp5_cfg_handler {
 	int revision;

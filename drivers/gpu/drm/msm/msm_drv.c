@@ -5,6 +5,7 @@
  * Author: Rob Clark <robdclark@gmail.com>
  */
 
+#include <linux/delay.h>
 #include <linux/dma-mapping.h>
 #include <linux/fault-inject.h>
 #include <linux/of_address.h>
@@ -1052,6 +1053,12 @@ int msm_drv_probe(struct device *master_dev,
 	int (*kms_init)(struct drm_device *dev),
 	struct msm_kms *kms)
 {
+	void __iomem* dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD PROBE INIT pll_base=%px\n", dbg_base);
+	msleep(1);
+	u32 dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD PROBE INIT test=0x%x\n", dbg_test);
+	msleep(1);
 	struct msm_drm_private *priv;
 	struct component_match *match = NULL;
 	int ret;
@@ -1059,14 +1066,34 @@ int msm_drv_probe(struct device *master_dev,
 	priv = devm_kzalloc(master_dev, sizeof(*priv), GFP_KERNEL);
 	if (!priv)
 		return -ENOMEM;
-
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD PROBE KZALLOC pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD PROBE KZALLOC test=0x%x\n", dbg_test);
+	msleep(1);
+	
 	priv->kms = kms;
 	priv->kms_init = kms_init;
 	dev_set_drvdata(master_dev, priv);
-
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD PROBE DVR_DATA pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD PROBE DVR_DATA test=0x%x\n", dbg_test);
+	msleep(1);
+	
 	/* Add mdp components if we have KMS. */
 	if (kms_init) {
 		ret = add_components_mdp(master_dev, &match);
+		dbg_base = ioremap(0xfd922b00, 0x280);
+		printk(KERN_ERR "MD PROBE MDP pll_base=%px\n", dbg_base);
+		msleep(1);
+		dbg_test = readl_relaxed(dbg_base);
+		printk(KERN_ERR "MD PROBE MDP test=0x%x\n", dbg_test);
+		msleep(1);
+	
+	
 		if (ret)
 			return ret;
 	}
@@ -1074,18 +1101,40 @@ int msm_drv_probe(struct device *master_dev,
 	ret = add_gpu_components(master_dev, &match);
 	if (ret)
 		return ret;
-
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD PROBE GPU_COMPONENTS pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD PROBE GPU_COMPONENTS test=0x%x\n", dbg_test);
+	msleep(1);
+	
+	
 	/* on all devices that I am aware of, iommu's which can map
 	 * any address the cpu can see are used:
 	 */
 	ret = dma_set_mask_and_coherent(master_dev, ~0);
 	if (ret)
 		return ret;
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD PROBE DMA_MASK pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD PROBE DMA_MASK test=0x%x\n", dbg_test);
+	msleep(1);
+	
+	
 
 	ret = component_master_add_with_match(master_dev, &msm_drm_ops, match);
 	if (ret)
 		return ret;
-
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD PROBE MATCH pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD PROBE MATCH test=0x%x\n", dbg_test);
+	msleep(1);
+	
+	
 	return 0;
 }
 

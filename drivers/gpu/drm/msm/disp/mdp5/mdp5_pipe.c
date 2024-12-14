@@ -4,6 +4,7 @@
  * Author: Rob Clark <robdclark@gmail.com>
  */
 
+#include <dsidbg.h>
 #include "mdp5_kms.h"
 
 int mdp5_pipe_assign(struct drm_atomic_state *s, struct drm_plane *plane,
@@ -155,6 +156,8 @@ struct mdp5_hw_pipe *mdp5_pipe_init(struct drm_device *dev,
 		enum mdp5_pipe pipe,
 		uint32_t reg_offset, uint32_t caps)
 {
+	DSI_DBG(0,"MD5 PIPE INIT");
+
 	struct mdp5_hw_pipe *hwpipe;
 
 	hwpipe = devm_kzalloc(dev->dev, sizeof(*hwpipe), GFP_KERNEL);

@@ -1331,6 +1331,12 @@ static int dpu_kms_mmap_dpu(struct dpu_kms *dpu_kms)
 
 static int dpu_dev_probe(struct platform_device *pdev)
 {
+	void __iomem* dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5_DPU PROBE INIT pll_base=%px\n", dbg_base);
+	msleep(1);
+	u32 dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5_DPU PROBE INIT test=0x%x\n", dbg_test);
+	msleep(1);
 	struct device *dev = &pdev->dev;
 	struct dpu_kms *dpu_kms;
 	int irq;
@@ -1344,19 +1350,42 @@ static int dpu_dev_probe(struct platform_device *pdev)
 		return -ENOMEM;
 
 	dpu_kms->pdev = pdev;
-
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5_DPU CLK PRE-CORE pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5_DPU CLk PRE-CORE test=0x%x\n", dbg_test);
+	msleep(1);
 	ret = devm_pm_opp_set_clkname(dev, "core");
 	if (ret)
 		return ret;
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5_DPU CLK CORE pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5_DPU CLk CORE test=0x%x\n", dbg_test);
+	msleep(1);
 	/* OPP table is optional */
 	ret = devm_pm_opp_of_add_table(dev);
 	if (ret && ret != -ENODEV)
 		return dev_err_probe(dev, ret, "invalid OPP table in device tree\n");
-
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5_DPU CLK OP pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5_DPU CLk OP test=0x%x\n", dbg_test);
+	msleep(1);
+	
 	ret = devm_clk_bulk_get_all(&pdev->dev, &dpu_kms->clocks);
 	if (ret < 0)
 		return dev_err_probe(dev, ret, "failed to parse clocks\n");
-
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5_DPU CLK GA pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5_DPU CLk GA test=0x%x\n", dbg_test);
+	msleep(1);
+	
 	dpu_kms->num_clocks = ret;
 
 	irq = platform_get_irq(pdev, 0);
@@ -1364,9 +1393,22 @@ static int dpu_dev_probe(struct platform_device *pdev)
 		return dev_err_probe(dev, irq, "failed to get irq\n");
 
 	dpu_kms->base.irq = irq;
+	dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5_DPU CLK PRE-IRQ pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5_DPU CLk PRE-IRQ test=0x%x\n", dbg_test);
+	msleep(1);
 
 	if (of_device_is_compatible(dpu_kms->pdev->dev.of_node, "qcom,mdp5"))
 		ret = dpu_kms_mmap_mdp5(dpu_kms);
+		dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5_DPU CLK MMAP pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5_DPU CLk MMAP test=0x%x\n", dbg_test);
+	msleep(1);
+	
 	else
 		ret = dpu_kms_mmap_dpu(dpu_kms);
 	if (ret)
@@ -1375,7 +1417,13 @@ static int dpu_dev_probe(struct platform_device *pdev)
 	ret = dpu_kms_parse_data_bus_icc_path(dpu_kms);
 	if (ret)
 		return ret;
-
+dbg_base = ioremap(0xfd922b00, 0x280);
+	printk(KERN_ERR "MD5_DPU ICC pll_base=%px\n", dbg_base);
+	msleep(1);
+	dbg_test = readl_relaxed(dbg_base);
+	printk(KERN_ERR "MD5_DPU ICC test=0x%x\n", dbg_test);
+	msleep(1);
+	
 	return msm_drv_probe(&pdev->dev, dpu_kms_init, &dpu_kms->base);
 }
 
