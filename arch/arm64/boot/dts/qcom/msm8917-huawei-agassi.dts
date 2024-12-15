@@ -215,3 +215,7 @@
 	vdda3p3-supply = <&pm8937_l13>;
 	status = "okay";
 };
+
+&mdss {
+	status = "disabled";
+};
