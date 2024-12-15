@@ -12,6 +12,8 @@
 #include "msm8917.dtsi"
 #include "pm8937.dtsi"
 
+/delete-node/ &thermal_zones;
+
 / {
 	model = "Huawei Mediapad T3 10 (agassi)";
 	compatible = "huawei,agassi", "qcom,msm8917";
@@ -28,6 +30,7 @@
 		ranges;
 
 		framebuffer0: framebuffer@90000000 {
+			status = "disabled";
 			compatible = "simple-framebuffer";
 			reg = <0x0 0x90001000 0x0 (800 * 1280 * 3)>;
 			width = <800>;
@@ -216,6 +219,30 @@
 	status = "okay";
 };
 
-&mdss {
-	status = "disabled";
+&mdss_dsi0 {
+	vdda-supply = <&pm8937_l2>;
+	vddio-supply = <&pm8937_l6>;
+	panel@0 {
+		compatible = "huawei,agassi-panel";
+		reg = <0>;
+
+		reset-gpios = <&tlmm 60 GPIO_ACTIVE_LOW>;
+		// TODO: regulators and backlight controll
+
+		port {
+			panel_in: endpoint {
+				remote-endpoint = <&mdss_dsi0_out>;
+			};
+		};
+	};
+};
+
+&mdss_dsi0_out {
+	data-lanes = <0 1 2 3>;
+	remote-endpoint = <&panel_in>;
+};
+
+&mdss_dsi0_phy {
+	vddio-supply = <&pm8937_l6>;
+	qcom,dsi-phy-regulator-ldo-mode;
 };
