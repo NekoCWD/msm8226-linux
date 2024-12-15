@@ -73,4 +73,8 @@ config DRM_PANEL_XIAOMI_UGGLITE_OTM1901A_TM
 	tristate "Xiaomi UGGLITE OTM1901A TM"
 	default DRM_PANEL_MSM89X7_GENERATED
 
+config DRM_PANEL_HUAWEI_AGASSI
+	tristate "Huawei Agassi panel"
+	default DRM_PANEL_MSM89X7_GENERATED
+
 endmenu
