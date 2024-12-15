@@ -13,7 +13,7 @@
 #include "pm8937.dtsi"
 
 / {
-	model = "Huawei Medipad T3 10 (agassi)";
+	model = "Huawei Mediapad T3 10 (agassi)";
 	compatible = "huawei,agassi", "qcom,msm8917";
 	chassis-type = "tablet";
 	
