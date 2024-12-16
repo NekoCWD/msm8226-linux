@@ -220,7 +220,7 @@
 };
 
 &tlmm {
-	gpio-reserved-ranges =  <>; // Do not reserve gpio 0;
+	gpio-reserved-ranges =  <>; // TODO: remove after 6.12 rebase
 };
 
 &usb {
