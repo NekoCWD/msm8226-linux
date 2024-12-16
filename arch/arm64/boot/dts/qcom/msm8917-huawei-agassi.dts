@@ -64,6 +64,22 @@
 			no-map;
 		};
 	};
+
+	ts_vci: gpio-regulator@47 {
+		compatible = "regulator-fixed";
+		regulator-name = "ts-vci";
+		gpio = <&tlmm 47 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+	};
+
+	ts_vddio: gpio-regulator@0 {
+		compatible = "regulator-fixed";
+		regulator-name = "ts-vddio";
+		gpio = <&tlmm 0 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+	};
 };
 
 &blsp1_uart2 {
@@ -204,6 +220,7 @@
 };
 
 &tlmm {
+	gpio-reserved-ranges =  <>; // Do not reserve gpio 0;
 };
 
 &usb {
@@ -245,4 +262,20 @@
 &mdss_dsi0_phy {
 	vddio-supply = <&pm8937_l6>;
 	qcom,dsi-phy-regulator-ldo-mode;
+};
+
+&blsp_i2c3 {
+	status = "okay";
+
+	touchscreen@24 {
+		compatible = "cypress,tt21000";
+
+		reg = <0x24>;
+		reset-gpios = <&tlmm 64 GPIO_ACTIVE_LOW>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <65 IRQ_TYPE_EDGE_FALLING>;
+
+		vdd-supply = <&ts_vci>;
+		vddio-supply = <&ts_vddio>;
+	};
 };
