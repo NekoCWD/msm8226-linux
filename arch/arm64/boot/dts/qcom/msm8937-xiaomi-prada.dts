@@ -50,7 +50,7 @@
 				 <&gcc GCC_MDSS_PCLK0_CLK>,
 				 <&gcc GCC_MDSS_ESC0_CLK>;
 			power-domains = <&gcc MDSS_GDSC>;
-			status = "okay";
+			status = "disabled";
 		};
 	};
 
@@ -151,7 +151,6 @@
 		linux,keycodes = <KEY_APPSELECT KEY_HOME KEY_BACK>;
 	};
 };
-/*
 &gpu {
 	status = "okay";
 };
@@ -171,7 +170,7 @@
 	status = "okay";
 
 	panel@0 {
-		compatible = "xiaomi,land-panel";
+		compatible = "xiaomi,prada-panel";
 		reg = <0>;
 
 		reset-gpios = <&tlmm 60 GPIO_ACTIVE_LOW>;
@@ -196,7 +195,7 @@
 
 	status = "okay";
 };
-*/
+
 &pm8937_resin {
 	linux,code = <KEY_VOLUMEDOWN>;
 	status = "okay";
