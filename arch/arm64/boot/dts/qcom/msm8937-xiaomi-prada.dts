@@ -32,7 +32,7 @@
 		#size-cells = <2>;
 		ranges;
 
-		stdout-path = "framebuffer0";
+		stdout-path = "serial0:115200n8";
 
 		framebuffer0: framebuffer@8dd01000 {
 			compatible = "simple-framebuffer";
@@ -96,6 +96,11 @@
 		regulator-always-on;
 		regulator-boot-on;
 	};
+};
+
+
+&blsp1_uart2 {
+	status = "okay";
 };
 
 &blsp1_i2c2 {
