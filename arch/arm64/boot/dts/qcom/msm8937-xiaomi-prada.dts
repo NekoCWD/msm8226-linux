@@ -128,6 +128,13 @@
 			led-max-microamp = <5000>;
 			color = <LED_COLOR_ID_GREEN>;
 		};
+
+		led@2 {
+			reg = <2>;
+			function = LED_FUNCTION_INDICATOR;
+			led-max-microamp = <5000>;
+			color = <LED_COLOR_ID_BLUE>;
+		};
 	};
 };
 
@@ -151,6 +158,7 @@
 		linux,keycodes = <KEY_APPSELECT KEY_HOME KEY_BACK>;
 	};
 };
+
 &gpu {
 	status = "okay";
 };
