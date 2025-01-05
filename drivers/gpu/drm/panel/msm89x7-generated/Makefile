@@ -15,3 +15,6 @@ obj-$(CONFIG_DRM_PANEL_XIAOMI_SANTONI_ILI9881C_EBBG) += panel-xiaomi-santoni-ili
 obj-$(CONFIG_DRM_PANEL_XIAOMI_UGGLITE_ILI9881C_SC) += panel-xiaomi-ugglite-ili9881c-sc.o
 obj-$(CONFIG_DRM_PANEL_XIAOMI_UGGLITE_OTM1901A_HX) += panel-xiaomi-ugglite-otm1901a-hx.o
 obj-$(CONFIG_DRM_PANEL_XIAOMI_UGGLITE_OTM1901A_TM) += panel-xiaomi-ugglite-otm1901a-tm.o
+obj-$(CONFIG_DRM_PANEL_XIAOMI_PRADA_NT35521S_CTC) += panel-xiaomi-prada-nt35521s-ctc.o
+obj-$(CONFIG_DRM_PANEL_XIAOMI_PRADA_HX8394f_BOE) += panel-xiaomi-prada-hx8394f-boe.o
+obj-$(CONFIG_DRM_PANEL_XIAOMI_PRADA_ILI9881C_TIANMA) += panel-xiaomi-prada-ili9881c-tianma.o
