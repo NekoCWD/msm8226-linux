@@ -10,6 +10,9 @@
 #include <dt-bindings/soc/qcom,apr.h>
 #include <dt-bindings/sound/qcom,q6dsp-lpass-ports.h>
 #include <dt-bindings/thermal/thermal.h>
+#include <dt-bindings/sound/qcom,q6afe.h>
+#include <dt-bindings/sound/qcom,q6asm.h>
+#include <dt-bindings/sound/qcom,q6voice.h>
 
 / {
 	interrupt-parent = <&intc>;
@@ -1089,6 +1092,32 @@
 					bias-pull-up;
 
 				};
+			};
+
+			cdc_pdm_lines_2_act: pdm-lines-2-on-pins {
+				pins = "gpio70", "gpio71", "gpio72";
+				function = "cdc_pdm0";
+				drive-strength = <8>;
+			};
+
+			cdc_pdm_lines_2_sus: pdm-lines-2-off-pins {
+				pins = "gpio70", "gpio71", "gpio72";
+				function = "cdc_pdm0";
+				drive-strength = <2>;
+				bias-disable;
+			};
+
+			cdc_pdm_lines_act: pdm-lines-on-pins {
+				pins = "gpio69", "gpio73", "gpio74";
+				function = "cdc_pdm0";
+				drive-strength = <8>;
+			};
+
+			cdc_pdm_lines_sus: pdm-lines-off-pins {
+				pins = "gpio69", "gpio73", "gpio74";
+				function = "cdc_pdm0";
+				drive-strength = <2>;
+				bias-disable;
 			};
 		};
 
@@ -2195,7 +2224,86 @@
 				    "spkr-iomux",
 				    "pri-iomux",
 				    "quin-iomux";
+
+			audio-routing =
+				"AMIC1", "MIC BIAS External1",
+				"AMIC2", "MIC BIAS Internal2",
+				"AMIC3", "MIC BIAS External1",
+				"MM_DL1", "MultiMedia1 Playback",
+				"MM_DL3", "MultiMedia3 Playback",
+				"MM_DL4", "MultiMedia4 Playback",
+				"MultiMedia2 Capture", "MM_UL2";
+
+			pinctrl-0 = <&cdc_pdm_lines_act &cdc_pdm_lines_2_act>;
+			pinctrl-1 = <&cdc_pdm_lines_sus &cdc_pdm_lines_2_sus>;
+			pinctrl-names = "default", "sleep";
+
 			status = "disabled";
+
+			mm1-dai-link {
+				link-name = "MultiMedia1";
+				cpu {
+					sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA1>;
+				};
+			};
+
+			mm2-dai-link {
+				link-name = "MultiMedia2";
+				cpu {
+					sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA2>;
+				};
+			};
+
+			mm3-dai-link {
+				link-name = "MultiMedia3";
+				cpu {
+					sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA3>;
+				};
+			};
+
+			mm4-dai-link {
+				link-name = "MultiMedia4";
+				cpu {
+					sound-dai = <&q6asmdai MSM_FRONTEND_DAI_MULTIMEDIA4>;
+				};
+			};
+
+			voicemmode1-dai-link {
+				link-name = "VoiceMMode1";
+				cpu {
+					sound-dai = <&q6voicedai VOICEMMODE1>;
+				};
+			};
+
+			primary-mi2s-dai-link {
+				link-name = "Primary MI2S";
+				cpu {
+					sound-dai = <&q6afedai PRIMARY_MI2S_RX>;
+				};
+
+				platform {
+					sound-dai = <&q6routing>;
+				};
+
+				codec {
+					sound-dai = <&lpass_codec 0>, <&wcd_codec 0>;
+				};
+			};
+
+			tertiary-mi2s-dai-link {
+				link-name = "Tertiary MI2S";
+				cpu {
+					sound-dai = <&q6afedai TERTIARY_MI2S_TX>;
+				};
+
+				platform {
+					sound-dai = <&q6routing>;
+				};
+
+				codec {
+					sound-dai = <&lpass_codec 1>, <&wcd_codec 1>;
+				};
+			};
 		};
 
 		lpass_codec: codec@c0f0000 {
@@ -2267,6 +2375,21 @@
 							#address-cells = <1>;
 							#size-cells = <0>;
 							#sound-dai-cells = <1>;
+
+							dai@16 {
+								reg = <PRIMARY_MI2S_RX>;
+								qcom,sd-lines = <0 1>;
+							};
+
+							dai@20 {
+								reg = <TERTIARY_MI2S_TX>;
+								qcom,sd-lines = <0 1>;
+							};
+
+							dai@127 {
+								reg = <QUINARY_MI2S_RX>;
+								qcom,sd-lines = <0>;
+							};
 						};
 
 						q6afecc: clock-controller {
@@ -2284,6 +2407,27 @@
 							#address-cells = <1>;
 							#size-cells = <0>;
 							#sound-dai-cells = <1>;
+
+							dai@0 {
+								reg = <0>;
+								direction = <Q6ASM_DAI_RX>;
+							};
+
+							dai@1 {
+								reg = <1>;
+								direction = <Q6ASM_DAI_TX>;
+							};
+
+							dai@2 {
+								reg = <2>;
+								direction = <Q6ASM_DAI_RX>;
+							};
+
+							dai@3 {
+								reg = <3>;
+								direction = <Q6ASM_DAI_RX>;
+								is-compress-dai;
+							};	
 						};
 					};
 
