@@ -222,6 +222,17 @@
 	status = "okay";
 };
 
+&pmi8950_flash {
+	status = "okay";
+
+	led@0 {
+		led-max-microamp = <200000>;
+		flash-max-microamp = <1000000>;
+		flash-max-timeout-us = <1280000>;
+		status = "okay";
+	};
+};
+
 &pmi8950_wled {
 	qcom,num-strings = <2>;
 	qcom,external-pfet;
