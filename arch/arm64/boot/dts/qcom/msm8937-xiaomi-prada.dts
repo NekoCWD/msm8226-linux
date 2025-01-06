@@ -156,6 +156,15 @@
 		enable-active-high;
 		regulator-always-on;
     };
+/*
+	fake-reg-mclk2 {
+        compatible = "regulator-fixed-clock";
+        regulator-name = "fake-reg-mclk2";
+        pinctrl-names = "default";
+        pinctrl-0 = <&camss_mclk2_default>;
+        clocks = <&gcc GCC_CAMSS_MCLK2_CLK>;
+        regulator-always-on;
+    };*/
 };
 
 
@@ -452,7 +461,7 @@
 };
 
 &tlmm {
-	gpio-reserved-ranges = <0 4>, <20 4>;
+	gpio-reserved-ranges = <0 4>;
 
 	gpio_keys_default: gpio-keys-default-state {
 		pins = "gpio91";
@@ -488,6 +497,35 @@
 		function = "gpio";
 		drive-strength = <8>;
 		bias-pull-up;
+	};
+
+
+	cam_sensor_front_default: cam_sensor_front_default {
+		pins = "gpio38", "gpio40", "gpio50";
+		function = "gpio";
+		bias-disable;
+		drive-strength = <2>;
+	};
+
+	camss_mclk0_default: camss-mclk0-pins {
+		pins = "gpio26";
+		function = "cam_mclk";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	camss_mclk1_default: camss-mclk1-pins {
+		pins = "gpio27";
+		function = "cam_mclk";
+		drive-strength = <2>;
+		bias-disable;
+	};
+
+	camss_mclk2_default: camss-mclk2-pins {
+		pins = "gpio28";
+		function = "cam_mclk";
+		drive-strength = <2>;
+		bias-disable;
 	};
 };
 
@@ -584,5 +622,66 @@
 	vdd-cdc-io-supply = <&pm8937_l5>;
 	vdd-cdc-tx-rx-cx-supply = <&pm8937_s4>;
 	vdd-micbias-supply = <&pm8937_l13>;
+	status = "okay";
+};
+
+
+&camss {
+	status = "okay";
+	vdda-supply = <&pm8937_s3>;
+
+	ports {
+		port@2 {
+			reg = <2>;
+			csiphy2_ep: endpoint {
+				clock-lanes = <7>;
+				data-lanes = <0 1>;
+				remote-endpoint = <&front_cam_ep>;
+			};
+		};
+	};
+};
+
+&cci_i2c1 {
+	camera-sensor@36 { // Front camera
+		compatible = "ovti,ov5670";
+
+		reg = <0x36>;
+
+		clocks = <&gcc GCC_CAMSS_MCLK2_CLK>;
+		clock-rates = <19200000>;
+
+		pinctrl-0 = <&cam_sensor_front_default>;
+		pinctrl-names = "default";
+
+		reset-gpios = <&tlmm 40 GPIO_ACTIVE_LOW>;
+
+		avdd-supply= <&pm8937_l22>;
+		dvdd-supply = <&pm8937_l23>;
+		dovdd-supply = <&pm8937_l6>;
+		aux-supply = <&pm8937_l17>;
+		orientation = <0>;
+		rotation = <270>;
+
+		status = "okay";
+
+		port {
+			front_cam_ep: endpoint {
+				data-lanes = <0 1>;
+				remote-endpoint = <&csiphy2_ep>;
+				link-frequencies = /bits/ 64 <450000000>;
+			};
+		};
+	};
+};
+
+&cci {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cci0_default>,
+		    <&cci1_default>,
+		    <&camss_mclk0_default>,
+		    <&camss_mclk1_default>,
+		    <&camss_mclk2_default>;
+
 	status = "okay";
 };
