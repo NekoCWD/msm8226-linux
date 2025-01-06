@@ -8,6 +8,9 @@
 #include <dt-bindings/arm/qcom,ids.h>
 #include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/leds/common.h>
+#include <dt-bindings/sound/qcom,q6afe.h>
+#include <dt-bindings/sound/qcom,q6asm.h>
+#include <dt-bindings/sound/qcom,q6voice.h>
 
 #include "msm8937.dtsi"
 #include "pm8937.dtsi"
@@ -133,6 +136,26 @@
 							"0", "0", "1";
 		};
 	};
+
+	speaker_amp: audio-amplifier {
+		compatible = "simple-audio-amplifier";
+		enable-gpios = <&tlmm 93 GPIO_ACTIVE_HIGH>;
+		sound-name-prefix = "Speaker Amp";
+	};
+
+	headphones_switch: audio-switch {
+		compatible = "simple-audio-amplifier";
+		enable-gpios = <&tlmm 94 GPIO_ACTIVE_HIGH>;
+		sound-name-prefix = "Headphones Switch";
+	};
+
+	hf-in {
+		compatible = "regulator-fixed";
+		regulator-name = "headphones-input";
+		gpio = <&tlmm 95 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		regulator-always-on;
+    };
 };
 
 
@@ -501,4 +524,65 @@
 
 &xo_board {
 	clock-frequency = <19200000>;
+};
+
+&adsp_mem {
+	status = "okay";
+};
+
+&adsp {
+	status = "okay";
+};
+
+&apr {
+	status = "okay";
+};
+
+&sound {
+	status = "okay";
+
+	model = "xiaomi-prada";
+
+	aux-devs = <&speaker_amp>, <&headphones_switch>;
+	widgets =
+		"Speaker", "Speaker",
+		"Headphone", "Headphones";
+	pin-switches = "Speaker", "Headphones";
+	audio-routing =
+		"Speaker", "Speaker Amp OUTL",
+		"Speaker", "Speaker Amp OUTR",
+		"Speaker Amp INL", "HPH_R",
+		"Speaker Amp INR", "HPH_R",
+		"Headphones", "Headphones Switch OUTL",
+		"Headphones", "Headphones Switch OUTR",
+		"Headphones Switch INL", "HPH_L",
+		"Headphones Switch INR", "HPH_R",
+		"AMIC1", "MIC BIAS External1",
+		"AMIC2", "MIC BIAS Internal2",
+		"AMIC3", "MIC BIAS External1",
+		"MM_DL1", "MultiMedia1 Playback",
+		"MM_DL3", "MultiMedia3 Playback",
+		"MM_DL4", "MultiMedia4 Playback",
+		"MultiMedia2 Capture", "MM_UL2";
+};
+
+&lpass_codec{
+	status = "okay";
+};
+
+&wcd_codec {
+	qcom,hphl-jack-type-normally-open;
+	/*
+	MBHC values ​​are copied from xiaomi-markw dts.
+	They are incorrect, but headphone and microphone detection works.
+	*/
+	qcom,mbhc-vthreshold-high = <75 150 237 450 500>;
+	qcom,mbhc-vthreshold-low = <75 150 237 450 500>;
+	qcom,micbias1-ext-cap;
+	qcom,micbias2-ext-cap;
+
+	vdd-cdc-io-supply = <&pm8937_l5>;
+	vdd-cdc-tx-rx-cx-supply = <&pm8937_s4>;
+	vdd-micbias-supply = <&pm8937_l13>;
+	status = "okay";
 };
