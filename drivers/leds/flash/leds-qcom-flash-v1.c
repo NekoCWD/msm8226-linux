@@ -4,6 +4,7 @@
  *
  * Copyright (c) 2020-2021, Nícolas F. R. A. Prado <n@nfraprado.net>
  * Copyright (c) 2021, Collabora Ltd.
+ * Copyright (c) 2025, Vasiliy Doylov (NekoCWD) <nekodevelopper@gmail.com>
  *
  * Based on QPNP LEDs driver from downstream MSM kernel sources.
  * Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
@@ -22,6 +23,8 @@
 #include <linux/string.h>
 #include <linux/sysfs.h>
 #include <linux/types.h>
+#include <linux/of.h>
+#include <linux/platform_device.h>
 
 #define QCOM_FLASH_ADDR_PERIPHERAL_SUBTYPE	0x05
 #define QCOM_FLASH_ADDR_STATUS			0x10
@@ -857,7 +860,7 @@ static int qcom_flash_setup_flcdev(struct qcom_flash_config *cfg,
 	struct led_init_data init_data = {};
 	struct led_flash_setting *setting;
 
-	init_data.fwnode = of_fwnode_handle(node);
+	init_data.fwnode = &node->fwnode;
 
 	led_cdev->brightness_set_blocking = qcom_flash_ledcdev_brightness_set;
 
@@ -1221,24 +1224,22 @@ static int qcom_flash_probe(struct platform_device *pdev)
 	return 0;
 }
 
-static int qcom_flash_remove(struct platform_device *pdev)
+static void qcom_flash_remove(struct platform_device *pdev)
 {
 	struct qcom_flash_device *leds_dev = platform_get_drvdata(pdev);
 
 	mutex_destroy(&leds_dev->lock);
-
-	return 0;
 }
 
 static const struct of_device_id qcom_flash_spmi_of_match[] = {
-	{ .compatible = "qcom,spmi-flash-leds" },
+	{ .compatible = "qcom,spmi-flash-led-v1" },
 	{},
 };
 MODULE_DEVICE_TABLE(of, qcom_flash_spmi_of_match);
 
 static struct platform_driver qcom_flash_driver = {
 	.driver		= {
-		.name	= "qcom,spmi-flash-leds",
+		.name	= "leds-qcom-flash-v1",
 		.of_match_table = qcom_flash_spmi_of_match,
 	},
 	.probe		= qcom_flash_probe,
