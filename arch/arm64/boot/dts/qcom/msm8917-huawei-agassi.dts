@@ -85,6 +85,25 @@
 		};
 	};
 
+	sensors: i2c-gpio {
+		// i2c4 is protected, bitbanging
+		compatible = "i2c-gpio";
+		sda-gpios = <&tlmm 14 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
+		scl-gpios = <&tlmm 15 (GPIO_ACTIVE_HIGH|GPIO_OPEN_DRAIN)>;
+		i2c-gpio,delay-us = <2>;        /* ~100 kHz */
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		accelerometer@4c {
+			compatible = "mcube,mc3510c";
+			reg = <0x4c>;
+
+			mount-matrix =  "0",  "1", "0",
+               				"-1", "0", "0",
+               				"0",  "0", "1";
+		};
+	};
+
 	reserved-memory {
 		framebuffer_mem: memory@90000000 {
 			reg = <0x0 0x90001000 0x0 (800 * 1280 * 3)>;
