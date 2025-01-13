@@ -318,6 +318,7 @@
 		pm8937_l6: l6 {
 			regulator-min-microvolt = <1800000>;
 			regulator-max-microvolt = <1800000>;
+			regulator-always-on;
 		};
 
 		pm8937_l7: l7 {
