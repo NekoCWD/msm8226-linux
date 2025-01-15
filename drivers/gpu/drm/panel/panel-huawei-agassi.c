@@ -61,8 +61,19 @@ static int huawei_agassi_panel_disable(struct drm_panel *panel)
 {
 	struct huawei_agassi_panel *ctx = to_huawei_agassi_panel(panel);
 	struct mipi_dsi_device *dsi = ctx->dsi;
-	mipi_dsi_dcs_write_seq(dsi, 0x11, 0x00);
-	msleep(100);
+	int ret;
+	ret = mipi_dsi_dcs_set_display_off(dsi);
+	if (ret < 0) {
+		dev_err(&dsi->dev, "Failed to set display off: %d\n", ret);
+		return ret;
+	}
+	msleep(20);
+	ret = mipi_dsi_dcs_exit_sleep_mode(dsi);
+	if (ret < 0) {
+		dev_err(&dsi->dev, "Failed to enter sleep mode: %d\n", ret);
+		return ret;
+	}
+	msleep(20);
 
 	return 0;
 }
